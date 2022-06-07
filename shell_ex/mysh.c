@@ -1,3 +1,4 @@
+#include "shell.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/wait.h>
@@ -8,33 +9,37 @@
 
 void type_prompt()
 {
+	char *buffer;
+	size_t len;
+
 	static int first_time = 1;
 	if (first_time) /* clear sreen for the first time */
 	{
 		/*const char* CLEAR_SCREEN-ANSI = "\e[l; lH\e[2J";*/
-		const char* clear_screen = NULL;
-		write(STDOUT_FILENO, clear_screen, 12);
+		/*const char* clear_screen = NULL;
+		*write(STDOUT_FILENO, clear_screen, 12);*/
+		printf("$ ");
+		getline(&buffer, &len, stdin);
 		first_time = 0;
 
 	}
 
-	printf("#"); /* display prompt */
+	/*printf("#");  display prompt */
 }
 
 void read_command(char cmd[], char *par[])
 {
-	char line[1024];
-	/*int size = 10;*/
+	char *line;
+	size_t len = 1024;
 	int count = 0, i = 0, j = 0;
 	char *array[100], *pch;
 
+	line = malloc(sizeof(char) * len);
+
 	for (;;) /* read one line */
 	{
-		int c = fgetc(stdin);
-		char *n = "\n";
-		/*int c = getline(&line, &size, stdin);*/
-		line[count++] = (char)c;
-		if (*n)
+		int read = getline(&line, &len, stdin);
+		if (read == EOF)
 			break;
 	}
 
@@ -76,4 +81,4 @@ int main()
 			break;
 	}
 	return (0);
- }
+}

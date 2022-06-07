@@ -19,10 +19,25 @@ char *_getenv(const char *name)
 
 }
 
-int main () {
-   printf("PATH : %s\n", _getenv("PATH"));
-   printf("HOME : %s\n", _getenv("HOME"));
-   printf("ROOT : %s\n", _getenv("ROOT"));
+int path_dir(char *env)
+{
+	char *token, *var; 
+	
+	var = _getenv(env);
+	token = strtok(var, ":");
+	while (token != NULL)
+	{
+		printf("%s\n", token);
+		token = strtok(NULL, ":");
+	}
 
-   return(0);
+   	return(0);
+}
+
+int main ()
+{
+	path_dir("PATH");
+
+	return (0);
+
 }

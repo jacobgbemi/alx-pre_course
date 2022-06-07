@@ -21,13 +21,13 @@ int main(void)
 	}
 	if (child_pid == 0)
 	{
-		printf("Wait for me, wait for me\n");
-		sleep(3);
+		printf("Child process Wait for me\n");
+		sleep(5);
 	}
 	else
 	{
 		wait(&status);
-		printf("Oh, it's all better now\n");
+		printf("Oh, it's all better now Parent process\n");
 	}
 	return (0);
 }
