@@ -2,6 +2,7 @@
 #define SHELL_H
 
 #include <stdlib.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -25,7 +26,19 @@ typedef struct list
 
 } list_t;
 
+#define MAXARGS 128 /* maxargs in struct can't be variable, use define */
 
+struct command{
+	int argc; /* number of args */
+	char *argv[MAXARGS]; /* arguments list */
+	enum built_t{ /* is argv[0] a builtin command? */
+		NONE, QUIT, JOBS, BG, FG
+	} builtin;
+};
+
+void eval(char *cmdline);
+int parse(const char *cmdline, struct command *cmd);
+void runSystemCommand(struct command *cmd, int bg);
 list_t *env_linked_list(char **env);
 list_t *add_end_node(list_t **head, char *str);
 size_t print_list(list_t *h);
