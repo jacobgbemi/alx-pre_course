@@ -51,7 +51,7 @@ list_t *add_end_node(list_t **head, char *str)
 	if (new == NULL)
 		return (NULL);
 
-	new->var = _strdup(str);
+	new->var = strdup(str);
 	new->next = NULL;
 
 	holder = *head;

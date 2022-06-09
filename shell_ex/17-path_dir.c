@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include "shell.h"
 
 char *_getenv(const char *name)
 {
@@ -33,11 +34,12 @@ int path_dir(char *env)
 
    	return(0);
 }
-
-int main ()
-{
-	path_dir("PATH");
-
-	return (0);
-
-}
+/*
+*int main ()
+*{
+*	path_dir("PATH");
+*
+*return (0);
+*
+*}
+*/

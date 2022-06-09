@@ -36,7 +36,6 @@ struct command{
 	} builtin;
 };
 
-char *_getenv(const char *name);
 void eval(char *cmdline);
 int parse(const char *cmdline, struct command *cmd);
 void runSystemCommand(struct command *cmd, int bg);

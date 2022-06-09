@@ -19,14 +19,15 @@ list_t *env_linked_list(char **env)
 	return (head);
 }
 
-int main(void)
+int main(int __attribute__((__unused__))ac, char **env)
 {
 	list_t *head;
-
+	
 	head = NULL;
-	char p[12] = "PATH";
-	char *path = p;
-	env_linked_list(**path);
+	*env = _getenv("PATH");
+	/*char **p = &(_getenv("PATH"));*/
+	
+	env_linked_list(env);
 	print_list(head);
 
 	return (0);
