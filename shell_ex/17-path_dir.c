@@ -34,12 +34,18 @@ int path_dir(char *env)
 
    	return(0);
 }
-/*
-*int main ()
-*{
-*	path_dir("PATH");
-*
-*return (0);
-*
-*}
-*/
+
+int main ()
+{
+	path_dir("PATH");
+	printf("\n");
+	printf("\n");
+	path_dir("HOME");
+	printf("\n");
+	printf("\n");
+	path_dir("ROOT");
+
+return (0);
+
+}
+
