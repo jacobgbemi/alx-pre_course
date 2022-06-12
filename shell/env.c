@@ -138,34 +138,10 @@ char *search_os(char *cmd, list_t *linkedlist_path)
 		status = access(abs_path, F_OK | X_OK);
 		if (status == 0)
 			return (abs_path);
-		free(abs_path);
+		/*free(abs_path);*/
 		ep = ep->next;
 	}
 	return (NULL);
-}
-
-/**
-  * parser - parses a string into tokens
-  * @str: string to parse
-  * @delimit: delimiters chosen by user
-  * Return: Double pointer to array of tokens
-  */
-char **parser(char *str)
-{
-	char **tokens, *token;
-	unsigned int i, wc;
-
-	wc = strlen(str);
-	tokens = malloc((wc + 1) * sizeof(char *));
-	if (!tokens)
-	{
-		perror("malloc failed\n");
-		return (NULL);
-	}
-	tokens[0] = token = strtok(str, " ");
-	for (i = 1; token; i++)
-		tokens[i] = token = strtok(NULL, " ");
-	return (tokens);
 }
 
 
@@ -178,8 +154,9 @@ char **parser(char *str)
   */
 void executor(char *argv[], list_t *linkedlist_path)
 {
-	pid_t child_status = 0;
+	pid_t child_pid;
 	char *abs_path;
+	int status;
 
 	abs_path = search_os(argv[0], linkedlist_path);
 	if (!abs_path)
@@ -188,73 +165,128 @@ void executor(char *argv[], list_t *linkedlist_path)
 		return;
 	}
 
-	switch (child_status = fork())
+	child_pid = fork();
+	if (child_pid == -1)
 	{
-	case -1:
-		perror("fork failed\n");
-		break;
-	case 0:
+		perror("Error:");
+                exit (1);
+        }
+        if (child_pid == 0)
+        {
 		if (execve(abs_path, argv, environ) == -1)
 			perror("execution failed\n");
-		break;
-	default:
-		free(abs_path);
-		if (wait(NULL) == -1)
-			perror("wait failed\n");
-		break;
-	}
+        }
+        else
+	{
+		wait(&status);
+        }
+
 }
 
+char *_strcpy(char *dest, char *src)
+{
+	int i;
 
+	for (i = 0; src[i] != '\0'; i++)
+	{
+		dest[i] = src[i];
+	}
+	dest[i] = '\0';
+
+	return (dest);
+}
+
+char **split_line(char *line)
+{
+  int bufsize = 1024, position = 0;
+  char *delimeter =  " \t\r\n\a";
+  char **tokens = malloc(bufsize * sizeof(char*));
+  char *token;
+  char *s = malloc(bufsize * sizeof(char));
+
+  _strcpy(s,line);
+
+  if (!tokens) {
+    perror("allocation error");
+    exit(1);
+  }
+
+  token = strtok(s, delimeter);
+  while (token != NULL) {
+    tokens[position] = token;
+    position++;
+
+    if (position >= bufsize) {
+      bufsize += 1024;
+      tokens = realloc(tokens, bufsize * sizeof(char*));
+      if (!tokens) {
+        perror("allocation error");
+        exit(1);
+      }
+    }
+
+    token = strtok(NULL, delimeter);
+  }
+  tokens[position] = NULL;
+  return (tokens);
+}
+
+/**
+  * free_list - frees a list
+  * @head: beginning of the list
+  */
+void free_list(list_t *head)
+{
+	if (head == NULL)
+		return;
+	free_list(head->next);
+	free(head->str);
+	free(head);
+}
 
 int main(void)
 {
-	char *buffer, *cmd, **tokens;
-	size_t len = 1024;
-	int read;
-	/*pid_t child_pid;*/
+       /* int status;*/
+        char *buffer;
 	list_t *linkedlist_path;
+        int characters;
+        char **commands;
+        /*pid_t child_pid;*/
+        size_t bufsize = 0;
 
-	buffer = malloc(sizeof(size_t) * len);
+        buffer = (char *)malloc(bufsize * sizeof(char));
+
+        if( buffer == NULL)
+        {
+            perror("Unable to allocate buffer");
+            exit(1);
+        }
+
 	linkedlist_path = list_from_path();
 
-	while (1)
-	{
-		printf("$ ");
-		read = getline(&buffer, &len, stdin);
-		/*if (read != EOF)
-		*	buffer = argv[ac++];*/
-		cmd = strtok(buffer, " ");
-		while (cmd)
-		{
-			tokens = parser(cmd);
-			executor(tokens, linkedlist_path);
-/*			child_pid = fork();
-*			if (child_pid == -1)
-*				return (1);
-*			if (child_pid == 0)
-*			{
-*				executor(cmd, linkedlist_path);
-*			}
-*			else
-*			{
-*				free(cmd);
-*				wait(&status);
-*			}
-*			cmd = strtok(NULL, " ");
-*/		}
+        while (1)
+        {
+		write(STDOUT_FILENO, "~$ ", 3);
+            	characters = getline(&buffer,&bufsize,stdin);
 
-		free(tokens);
-		cmd = strtok(NULL, " ");
-		if (read == EOF)
+            	commands = split_line(buffer);
+		
+              	while (commands)
 		{
-			free(buffer);
-			continue;
+			executor(commands, linkedlist_path);
+			/*free(commands);*/
+			/*free_list(linkedlist_path);*/
+			if (commands == NULL)
+				break;
 		}
 		
-	}
+		if (characters == EOF)
+		{
+                	free(buffer);
+                	continue;
+            	}
 
-	return (0);
+        }
 
-
+return (0);      
 }
