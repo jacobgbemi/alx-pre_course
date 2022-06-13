@@ -65,4 +65,13 @@ void _puts(char *str);
 int _isnumber(int c);
 int _strlen( char *s);
 
+/* strtok */
+char *_strchr(char *s, char c);
+unsigned int _strspn(char *s, char *accept);
+char *_strpbrk(char *s, char *delims);
+char *_strtok(char *s, char *delim);
+
+/* helper functions*/
+void *_realloc(void *ptr, unsigned int old_size, unsigned int new_size);
+
 #endif

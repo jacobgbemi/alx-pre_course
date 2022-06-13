@@ -228,7 +228,7 @@ char **split_line(char *line)
 
     if (position >= bufsize) {
       bufsize += 1024;
-      tokens = realloc(tokens, bufsize * sizeof(char*));
+      tokens = _realloc(*tokens, token[position], bufsize * sizeof(char*));
       if (!tokens) {
         perror("allocation error");
         exit(1);
