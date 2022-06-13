@@ -1,25 +1,5 @@
-#include <stdio.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
+#include "shell.h"
 
-#define BUFSIZE 1024
-extern char **environ;
-/**
-  * struct environ_path - linked list from PATH
-  * @path: path in the format /usr/bin
-  * @len: length of the string
-  * @next: points to the next node
-  */
-typedef struct env_path
-{
-	char *str;
-	unsigned int len;
-	struct env_path *next;
-} list_t;
 
 /**
   * add_node - adds a new node to the end of a linked list
@@ -37,7 +17,10 @@ list_t *add_node(list_t **head, char *str, unsigned int len)
 		return (NULL);
 	dupstr = strdup(str);
 	if (dupstr == NULL)
+	{
+		/*free(dupstr);*/
 		return (NULL);
+	}
 	new = malloc(sizeof(list_t));
 	if (new == NULL)
 		return (NULL);
@@ -54,6 +37,7 @@ list_t *add_node(list_t **head, char *str, unsigned int len)
 	while (holder->next != NULL)
 		holder = holder->next;
 	holder->next = new;
+	/*free(dupstr);*/
 	return (*head);
 }
 /**
@@ -64,10 +48,11 @@ list_t *list_from_path(void)
 {
 	unsigned int len, i, j;
 	char *env;
-	char buffer[BUFSIZE];
+	char buffer[1024];
 	list_t *dir;
 
 	dir = NULL;
+	/*buffer = malloc(sizeof(char) * BUFSIZE);*/
 	len = i = j = 0;
 	env = getenv("PATH");
 	while (*env)
@@ -83,6 +68,7 @@ list_t *list_from_path(void)
 			len = j = 0;
 		}
 		env++;
+		/*free(buffer);*/
 	}
 	return (dir);
 }
@@ -126,24 +112,41 @@ char *search_os(char *cmd, list_t *linkedlist_path)
 	{
 		abs_path = strdup(cmd);
 		return (abs_path);
+		/*free(abs_path);*/
 	}
 	while (ep != NULL)
 	{
 		abs_path = strdup(ep->str);
 		if (abs_path == NULL)
+		{
+			/*free(abs_path);*/
 			return (NULL);
+		}
+		/*free(abs_path);*/
 		abs_path = strcat(abs_path, cmd);
 		if (abs_path == NULL)
 			return (NULL);
 		status = access(abs_path, F_OK | X_OK);
 		if (status == 0)
 			return (abs_path);
-		/*free(abs_path);*/
+		free(abs_path);
 		ep = ep->next;
 	}
 	return (NULL);
 }
 
+
+/**
+ * c_exit - frees user's typed command and linked list before exiting
+ * @str: user's typed command
+ * @env: input the linked list of envirnment
+ */
+void __exit(char **str, list_t *env)
+{
+	free_double_ptr(str);
+	free_list(env);
+	_exit(0);
+}
 
 /**
   * executor - executes a command
@@ -162,6 +165,7 @@ void executor(char *argv[], list_t *linkedlist_path)
 	if (!abs_path)
 	{
 		perror("command not found\n");
+		/*free(abs_path);*/
 		return;
 	}
 
@@ -174,11 +178,16 @@ void executor(char *argv[], list_t *linkedlist_path)
         if (child_pid == 0)
         {
 		if (execve(abs_path, argv, environ) == -1)
+		{
 			perror("execution failed\n");
+			__exit(argv, linkedlist_path);
+		}
+		/*free(abs_path);*/
         }
         else
 	{
 		wait(&status);
+		
         }
 
 }
@@ -212,6 +221,7 @@ char **split_line(char *line)
   }
 
   token = strtok(s, delimeter);
+  /*free(s);*/
   while (token != NULL) {
     tokens[position] = token;
     position++;
@@ -226,6 +236,8 @@ char **split_line(char *line)
     }
 
     token = strtok(NULL, delimeter);
+    /*free(tokens);*/
+    /*free_double_ptr(tokens);*/
   }
   tokens[position] = NULL;
   return (tokens);
@@ -237,12 +249,32 @@ char **split_line(char *line)
   */
 void free_list(list_t *head)
 {
-	if (head == NULL)
-		return;
-	free_list(head->next);
-	free(head->str);
-	free(head);
+	list_t *holder;
+	while (head != NULL)
+	{
+		holder = head;
+		head = head->next;
+		free(holder->str);
+		free(holder);
+	}
 }
+
+/**
+ * free_double_ptr - free malloced arrays
+ * @str: array of strings
+ */
+void free_double_ptr(char **str)
+{
+	int i = 0;
+
+	while (str[i] != NULL)
+	{
+		free(str[i]);
+		i++;
+	}
+	free(str);
+}
+
 
 int main(void)
 {
@@ -251,9 +283,9 @@ int main(void)
 	list_t *linkedlist_path;
         int characters;
         char **commands;
+	size_t bufsize = BUFSIZE;
         /*pid_t child_pid;*/
-        size_t bufsize = 0;
-
+        
         buffer = (char *)malloc(bufsize * sizeof(char));
 
         if( buffer == NULL)
@@ -264,29 +296,38 @@ int main(void)
 
 	linkedlist_path = list_from_path();
 
-        while (1)
-        {
+        do {
 		write(STDOUT_FILENO, "~$ ", 3);
             	characters = getline(&buffer,&bufsize,stdin);
 
             	commands = split_line(buffer);
-		
-              	while (commands)
-		{
+		if (!commands)
+			break;
+			
+		if (is_builtin(commands[0]))
+			is_builtin(commands[0])(commands, linkedlist_path, buffer);
+		else
 			executor(commands, linkedlist_path);
-			/*free(commands);*/
-			/*free_list(linkedlist_path);*/
-			if (commands == NULL)
-				break;
-		}
 		
+		free(commands);
+				
+/*              	while (commands)
+*		{
+*			if (!commands)
+*				break;
+*			executor(commands, linkedlist_path);
+*			*commands = strtok(NULL, "\n");
+*			free(commands);
+*			free_list(linkedlist_path);
+*		}
+*/				
 		if (characters == EOF)
 		{
                 	free(buffer);
                 	continue;
             	}
 
-        }
+        } while (1);
 
 return (0);      
 }
