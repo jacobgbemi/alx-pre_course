@@ -11,23 +11,23 @@
  (*  * Requires ^R
  (* reverse-i-search **HISTORY**
 */
-int (*is_builtin(char *cmd))()
+int (*_builtin(char *cmd))()
 {
 	unsigned int i;
-	builtin_cmds_t builds[] = {
+	builtin_t builds[] = {
 		{"alias", _alias},
 		{"cd", _cd},
-		{"env", _env},
-		{"exit", _exit_with_grace},
+		{"env", current_env},
+		{"exit", _exit_builtin},
 		{"history", _history},
-		{"setenv", _setenv_usr},
+		{"setenv", _setenv},
 		{NULL, NULL}
 	};
 
 	i = 0;
 	while (*builds[i].fun != NULL)
 	{
-		if (strncmp(builds[i].cmd_str, cmd, _strlen(builds[i].cmd_str)) == 0)
+		if (_strncmp(builds[i].cmd_str, cmd, _strlen(builds[i].cmd_str)) == 0)
 			return (builds[i].fun);
 		i++;
 	}
@@ -41,7 +41,7 @@ int (*is_builtin(char *cmd))()
  (* * CHANGE TO VARIADIC LIST.
   * Return: -1 if exit fails.
   */
-int _exit_with_grace(char **tokens, list_t *linkedlist_path, char *buffer)
+int _exit_builtin(char **tokens, list_t *linkedlist_path, char *buffer)
 {
 	unsigned char exit_status;
 	int i;
@@ -54,7 +54,7 @@ int _exit_with_grace(char **tokens, list_t *linkedlist_path, char *buffer)
 			break;
 		}
 	}
-	exit_status = tokens[1] && i >= _strlen(tokens[1]) ? atoi(tokens[1]) : 0;
+	exit_status = tokens[1] && i >= _strlen(tokens[1]) ? _atoi(tokens[1]) : 0;
 	if (linkedlist_path && buffer && tokens)
 	{
 		free_list(linkedlist_path);
@@ -73,7 +73,7 @@ int _exit_with_grace(char **tokens, list_t *linkedlist_path, char *buffer)
   * @environment: linked list environment
   * Return: 0 on success, -1 on catastrophic failure
   */
-int _env(char **tokens, list_t *environment)
+int current_env(char **tokens, list_t *environment)
 {
 	char **envir;
 
@@ -174,8 +174,8 @@ int _cd(char **tokens)
 	else if (access(target, F_OK | R_OK) == 0)
 		chdir(target);
 	else
-		puts("Could not find directory\n");
-	setenv("OLDPWD", getenv("PWD"), 1);
+		_puts("Could not find directory\n");
+	setenv("OLDPWD", _getenv("PWD"), 1);
 	setenv("PWD", getcwd(pwd, sizeof(pwd)), 1);
 	return (0);
 }
@@ -187,7 +187,7 @@ int _cd(char **tokens)
   * @tokens: KEY=VALUE pair
   * Return: 0 on success, -1 on failure
   */
-int _setenv_usr(char **tokens)
+int _setenv(char **tokens)
 {
 	int i, status, wc;
 	char *key, *value;
