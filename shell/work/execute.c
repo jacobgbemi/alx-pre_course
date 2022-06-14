@@ -1,3 +1,4 @@
+#include "shell.h"
 
 char **split_line(char *line)
 {

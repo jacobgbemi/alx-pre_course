@@ -18,11 +18,16 @@
 #define BUFSIZE 1024
 extern char **environ;
 
+/**
+  * struct builtin_commands - stuct for function pointers to builtin commands
+  * @cmd_str: commands (env, cd, alias, history)
+  * @fun: function
+  */
 typedef struct builtin_commands
 {
 	char *cmd_str;
 	int (*fun)();
-} builtin_cmds_t;
+} builtin_t;
 
 
 /**
@@ -38,28 +43,36 @@ typedef struct env_path
 
 } list_t;
 
-/* In builtins.c */
-int (*is_builtin(char *cmd))();
-int _exit_with_grace(char **tokens, list_t *linkedlist_path, char *buffer);
-int _env(char **tokens, list_t *environment);
+/* In builtin.c */
+int (*_builtin(char *cmd))();
+int _exit_builtin(char **tokens, list_t *linkedlist_path, char *buffer);
 int _cd(char **tokens);
-
-/* In builtins_2.c */
-int _setenv_usr(char **tokens);
 int _alias(void);
 int _history(void);
 
+/* env_func.c */
+char *_getenv(char *name);
+int _setenv(char **tokens);
+int current_env(char **tokens, list_t *environment);
+
+/* linkedlist.c */
 list_t *add_node(list_t **head, char *str, unsigned int len);
-list_t *list_from_path(void);
-list_t *environ_linked_list(void);
-char *search_os(char *cmd, list_t *linkedlist_path);
-void executor(char *argv[], list_t *linkedlist_path);
-char *_strcpy(char *dest, char *src);
-char **split_line(char *line);
-void free_double_ptr(char **str);
+list_t *path_list(void);
+list_t *environ_list(void);
+char *_which(char *cmd, list_t *linkedlist_path);
 void free_list(list_t *head);
 
-/* strings functins*/
+/* execute.c */
+void execute(char *argv[], list_t *linkedlist_path);
+char **split_line(char *line);
+
+/* memory.c */
+void *_realloc(void *ptr, unsigned int old_size, unsigned int new_size);
+void free_double_ptr(char **str);
+void __exit(char **str, list_t *env);
+
+/* strings2.c*/
+char *_strcpy(char *dest, char *src);
 int _putchar(char c);
 void _puts(char *str);
 int _isnumber(int c);
@@ -71,7 +84,12 @@ unsigned int _strspn(char *s, char *accept);
 char *_strpbrk(char *s, char *delims);
 char *_strtok(char *s, char *delim);
 
-/* helper functions*/
-void *_realloc(void *ptr, unsigned int old_size, unsigned int new_size);
+/* string1.c */
+int _strcmp(char *s1, char *s2);
+int _strncmp(char *s1, char *s2, size_t bytes);
+char *_strcat(char *dest, char *src);
+char *_strdup(char *src);
+int _atoi(char *s);
+
 
 #endif

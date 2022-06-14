@@ -79,13 +79,13 @@ int _cd(char **tokens)
 	char pwd[BUFSIZE];
 	char *home;
 
-	home = getenv("HOME");
+	home = _getenv("HOME");
 	if (tokens[1])
 	{
 		if (tokens[1][0] == '~' && !tokens[1][1])
 			target = home;
 		else if (tokens[1][0] == '-' && !tokens[1][1])
-			target = getenv("OLDPWD");
+			target = _getenv("OLDPWD");
 		else
 			target = tokens[1];
 	}

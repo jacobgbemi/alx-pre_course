@@ -1,3 +1,4 @@
+#include "shell.h"
 
 int main(void)
 {
@@ -27,10 +28,10 @@ int main(void)
 		if (!commands)
 			break;
 			
-		if (is_builtin(commands[0]))
-			is_builtin(commands[0])(commands, linkedlist_path, buffer);
+		if (_builtin(commands[0]))
+			_builtin(commands[0])(commands, linkedlist_path, buffer);
 		else
-			executor(commands, linkedlist_path);
+			execute(commands, linkedlist_path);
 		
 		free(commands);
 				
