@@ -44,7 +44,7 @@ list_t *add_node(list_t **head, char *str, unsigned int len)
   * list_from_path - builds a linked list from PATH
   * Return: pointer to linked list
   */
-list_t *list_from_path(void)
+list_t *path_list(void)
 {
 	unsigned int len, i, j;
 	char *env;
@@ -54,7 +54,7 @@ list_t *list_from_path(void)
 	dir = NULL;
 	/*buffer = malloc(sizeof(char) * BUFSIZE);*/
 	len = i = j = 0;
-	env = getenv("PATH");
+	env = _getenv("PATH");
 	while (*env)
 	{
 		buffer[j++] = *env;
@@ -77,60 +77,60 @@ list_t *list_from_path(void)
   * environ_linked_list - builds a linked list from PATH
   * Return: pointer to linked list
   */
-list_t *environ_linked_list(void)
+list_t *environ_list(void)
 {
 	int i, j;
 	char **env;
-	list_t *ep;
+	list_t *path;
 
-	ep = NULL;
+	path = NULL;
 	i = j = 0;
 	env = environ;
 	while (env[i])
 	{
-		add_node(&ep, env[i], (unsigned int)strlen(env[i]));
+		add_node(&path, env[i], (unsigned int)_strlen(env[i]));
 		i++;
 	}
-	return (ep);
+	return (path);
 }
 
 
 
 
-char *search_os(char *cmd, list_t *linkedlist_path)
+char *_which(char *cmd, list_t *linkedlist_path)
 {
 	int status;
 	char *abs_path;
-	list_t *ep;
+	list_t *path;
 
-	ep = linkedlist_path;
-	if (ep == NULL || cmd == NULL)
+	path = linkedlist_path;
+	if (path == NULL || cmd == NULL)
 		return (NULL);
-	if ((strncmp(cmd, "/", 1) == 0
-			|| strncmp(cmd, "./", 2) == 0)
+	if ((_strncmp(cmd, "/", 1) == 0
+			|| _strncmp(cmd, "./", 2) == 0)
 			&& access(cmd, F_OK | X_OK) == 0)
 	{
-		abs_path = strdup(cmd);
+		abs_path = _strdup(cmd);
 		return (abs_path);
 		/*free(abs_path);*/
 	}
-	while (ep != NULL)
+	while (path != NULL)
 	{
-		abs_path = strdup(ep->str);
+		abs_path = strdup(path->str);
 		if (abs_path == NULL)
 		{
 			/*free(abs_path);*/
 			return (NULL);
 		}
 		/*free(abs_path);*/
-		abs_path = strcat(abs_path, cmd);
+		abs_path = _strcat(abs_path, cmd);
 		if (abs_path == NULL)
 			return (NULL);
 		status = access(abs_path, F_OK | X_OK);
 		if (status == 0)
 			return (abs_path);
 		free(abs_path);
-		ep = ep->next;
+		path = path->next;
 	}
 	return (NULL);
 }
@@ -155,17 +155,16 @@ void __exit(char **str, list_t *env)
   * @linkedlist_path: PATH in LL form
   * Return: 0 on success, -1 on failure
   */
-void executor(char *argv[], list_t *linkedlist_path)
+void execute(char *argv[], list_t *linkedlist_path)
 {
 	pid_t child_pid;
 	char *abs_path;
 	int status;
 
-	abs_path = search_os(argv[0], linkedlist_path);
+	abs_path = _which(argv[0], linkedlist_path);
 	if (!abs_path)
 	{
 		perror("command not found\n");
-		/*free(abs_path);*/
 		return;
 	}
 
@@ -182,7 +181,7 @@ void executor(char *argv[], list_t *linkedlist_path)
 			perror("execution failed\n");
 			__exit(argv, linkedlist_path);
 		}
-		/*free(abs_path);*/
+		
         }
         else
 	{
@@ -294,7 +293,7 @@ int main(void)
             exit(1);
         }
 
-	linkedlist_path = list_from_path();
+	linkedlist_path = path_list();
 
         do {
 		write(STDOUT_FILENO, "~$ ", 3);
@@ -311,16 +310,6 @@ int main(void)
 		
 		free(commands);
 				
-/*              	while (commands)
-*		{
-*			if (!commands)
-*				break;
-*			executor(commands, linkedlist_path);
-*			*commands = strtok(NULL, "\n");
-*			free(commands);
-*			free_list(linkedlist_path);
-*		}
-*/				
 		if (characters == EOF)
 		{
                 	free(buffer);
