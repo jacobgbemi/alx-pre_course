@@ -41,3 +41,34 @@ void *_realloc(void *ptr, unsigned int old_size, unsigned int new_size)
 
 	return (p);
 }
+
+
+/**
+ * c_exit - frees user's typed command and linked list before exiting
+ * @str: user's typed command
+ * @env: input the linked list of envirnment
+ */
+void __exit(char **str, list_t *env)
+{
+	free_double_ptr(str);
+	free_list(env);
+	_exit(0);
+}
+
+
+
+/**
+ * free_double_ptr - free malloced arrays
+ * @str: array of strings
+ */
+void free_double_ptr(char **str)
+{
+	int i = 0;
+
+	while (str[i] != NULL)
+	{
+		free(str[i]);
+		i++;
+	}
+	free(str);
+}
