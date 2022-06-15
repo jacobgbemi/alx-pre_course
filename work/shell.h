@@ -65,8 +65,10 @@ char *_which(char *cmd, list_t *linkedlist_path);
 void free_list(list_t *head);
 
 /* execute.c */
-void execute(char *argv[], list_t *linkedlist_path);
+int execute(char *argv[], list_t *linkedlist_path);
 char **split_line(char *line);
+void ctrl_D(int i, char *command, list_t *env);
+void ctrl_c(int n);
 
 /* memory.c */
 void *_realloc(void *ptr, unsigned int old_size, unsigned int new_size);
@@ -93,5 +95,8 @@ char *_strcat(char *dest, char *src);
 char *_strdup(char *src);
 int _atoi(char *s);
 
+/* non_interactive */
+char *c_ignore(char *str);
+void non_interactive(list_t *env);
 
 #endif

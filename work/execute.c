@@ -56,39 +56,73 @@ char **split_line(char *line)
   * @linkedlist_path: PATH in LL form
   * Return: 0 on success, -1 on failure
   */
-void execute(char *argv[], list_t *linkedlist_path)
+int execute(char *argv[], list_t *linkedlist_path)
 {
 	pid_t child_pid;
 	char *abs_path;
-	int status;
+	int status = 0;
 
-	execve(argv[0], argv, NULL);
-
-	abs_path = _which(argv[0], linkedlist_path);
-	if (!abs_path)
+	if (access(argv[0], F_OK) == 0) /* check access to abs path */
 	{
-		perror("command not found\n");
-		return;
+		abs_path = argv[0];
+		status = 1;
 	}
-
-	child_pid = fork();
-	if (child_pid == -1)
+	else /* if not, search through the path list */
+		abs_path = _which(argv[0], linkedlist_path);
+	
+	if (access(abs_path, X_OK) != 0) /* if not, executable */
 	{
-		perror("Error:");
-		exit(1);
-	}
-	if (child_pid == 0)
-	{
-		if (execve(abs_path, argv, environ) == -1)
-		{
-			perror("execution failed\n");
-			__exit(argv, linkedlist_path);
-		}
-
+		/*free_double_ptr(argv);*/
+		return (127);
 	}
 	else
 	{
-		wait(&status);
+		child_pid = fork();
+		if (child_pid == 0)
+		{
+			if (execve(abs_path, argv, environ) == -1)
+			{
+				perror("execution failed\n");
+				__exit(argv, linkedlist_path);
+			}
+		}
+		else
+		{
+			wait(&status);
+			/*free_double_ptr(argv);*/
+			if (status == 0)
+				free(abs_path);
+		}
+
 	}
+	return (0);
 }
 
+/**
+ * ctrl_c - ignore Ctrl-C input and prints prompt again
+ * @n: takes in int from signal
+ */
+void ctrl_c(int n)
+{
+	(void)n;
+	write(STDOUT_FILENO, "\n$ ", 3);
+}
+
+
+/**
+ * ctrl_D - exits program if Ctrl-D was pressed
+ * @i: characters read via get_line
+ * @command: user's typed in command
+ * @env: environmental variable linked list
+ */
+void ctrl_D(int i, char *command, list_t *env)
+{
+	if (i == 0) /* handles Ctrl+D */
+	{
+		free(command); /* exit with newline if in shell */
+		free_list(env);
+		if (isatty(STDIN_FILENO))/* ctrl+d prints newline */
+			write(STDOUT_FILENO, "\n", 1);
+		exit(0);
+	}
+}

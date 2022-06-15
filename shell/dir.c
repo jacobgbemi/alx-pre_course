@@ -1,7 +1,8 @@
 #include <dirent.h> 
 #include <stdio.h> 
 
-int main(void) {
+char *current_dir(void)
+{
   DIR *d;
   struct dirent *dir;
   d = opendir(".");
@@ -11,5 +12,11 @@ int main(void) {
     }
     closedir(d);
   }
-  return(0);
+  return(NULL);
+}
+
+int main()
+{
+	current_dir();
+	return (0);
 }

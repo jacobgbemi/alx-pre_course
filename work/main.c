@@ -9,7 +9,7 @@ int main(void)
 {
 	char *buffer, **commands;
 	list_t *linkedlist_path;
-	int characters;
+	int characters, line_no = 0;
 	size_t bufsize = BUFSIZE;
 
 	buffer = (char *)malloc(bufsize * sizeof(char));
@@ -22,10 +22,15 @@ int main(void)
 	linkedlist_path = path_list();
 	while (1)
 	{
-		write(STDOUT_FILENO, "~$ ", 3);
+		line_no++;
+		if (isatty(STDIN_FILENO)) /* reprompt if in interactive shell */
+			write(STDOUT_FILENO, "$ ", 3);
+		else
+			non_interactive(linkedlist_path);
+
+		signal(SIGINT, ctrl_c); /* makes ctrl+c not work */
 		characters = getline(&buffer, &bufsize, stdin);
-		if (characters == -1)
-			perror("Error in reading line");
+		ctrl_D(characters, buffer, linkedlist_path);
 
 		commands = split_line(buffer);
 		if (!commands)
